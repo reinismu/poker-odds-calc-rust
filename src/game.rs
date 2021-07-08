@@ -69,10 +69,14 @@ fn get_hand_strength(
     let mut rank_map = HashMap::with_capacity(12);
 
     for c in cards.iter() {
-        let entry = suit_map.entry(c.suit).or_insert_with(Vec::new);
+        let entry = suit_map
+            .entry(c.suit)
+            .or_insert_with(|| Vec::with_capacity(6));
         entry.push(*c);
         sort_by_rank_desc(entry);
-        let entry = rank_map.entry(c.rank).or_insert_with(Vec::new);
+        let entry = rank_map
+            .entry(c.rank)
+            .or_insert_with(|| Vec::with_capacity(4));
         entry.push(*c);
         sort_by_rank_desc(entry);
     }
@@ -110,7 +114,7 @@ fn get_hand_strength(
                 points: calc_points(6, &hand),
             };
         }
-        if let Some(hand) = get_straight(game_type, &cards) {
+        if let Some(hand) = get_straight(game_type, &cards, &rank_map) {
             return HandStrength {
                 hand_combination: HandCombination::Straight,
                 points: calc_points(5, &hand),
@@ -145,14 +149,14 @@ fn get_hand_strength(
                     points: calc_points(5, &hand),
                 };
             }
-            if let Some(hand) = get_straight(game_type, &cards) {
+            if let Some(hand) = get_straight(game_type, &cards, &rank_map) {
                 return HandStrength {
                     hand_combination: HandCombination::Straight,
                     points: calc_points(4, &hand),
                 };
             }
         } else {
-            if let Some(hand) = get_straight(game_type, &cards) {
+            if let Some(hand) = get_straight(game_type, &cards, &rank_map) {
                 return HandStrength {
                     hand_combination: HandCombination::Straight,
                     points: calc_points(5, &hand),
