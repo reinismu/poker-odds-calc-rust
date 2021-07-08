@@ -1,4 +1,4 @@
-use crate::{Card, Cards};
+use crate::Card;
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -7,6 +7,6 @@ pub struct Player {
 
 impl Player {
     pub fn new(hand: Vec<Card>) -> Player {
-        return Player { hand };
+        Player { hand }
     }
 }

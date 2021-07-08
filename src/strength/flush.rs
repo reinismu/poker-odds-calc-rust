@@ -5,8 +5,8 @@ use crate::{card::Suit, Card, GameType};
 pub fn get_flush(
     game_type: GameType,
     suit_map: &HashMap<Suit, Vec<Card>>,
-    player_cards: &Vec<Card>,
-    board: &Vec<Card>,
+    player_cards: &[Card],
+    board: &[Card],
 ) -> Option<Vec<Card>> {
     for (_, cards) in suit_map.iter() {
         if cards.len() >= 5 {
@@ -57,7 +57,7 @@ mod tests {
             Suit::Clubs => Card::from_cards_str("9c7c6c5c4c").unwrap(),
         };
         assert_eq!(
-            get_flush(GameType::TexasHoldem, &suit_map, &vec![], &vec![]),
+            get_flush(GameType::TexasHoldem, &suit_map, &[], &[]),
             Some(vec![
                 Card {
                     suit: Suit::Clubs,
@@ -89,9 +89,6 @@ mod tests {
             Suit::Hearts => Card::from_cards_str("2h").unwrap(),
             Suit::Clubs => Card::from_cards_str("8c7c6c5c").unwrap(),
         };
-        assert_eq!(
-            get_flush(GameType::TexasHoldem, &suit_map, &vec![], &vec![]),
-            None
-        );
+        assert_eq!(get_flush(GameType::TexasHoldem, &suit_map, &[], &[]), None);
     }
 }

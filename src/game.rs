@@ -6,7 +6,7 @@ fn sort_by_rank_desc(cards: &mut Vec<Card>) {
     cards.sort_by(|a, b| b.rank.partial_cmp(&a.rank).unwrap());
 }
 
-fn get_hand_strength(board: &Vec<Card>, player_cards: &Vec<Card>) {
+fn get_hand_strength(board: &[Card], player_cards: &[Card]) {
     let mut cards: Vec<Card> = board.iter().chain(player_cards).cloned().collect();
     sort_by_rank_desc(&mut cards);
 
@@ -14,13 +14,11 @@ fn get_hand_strength(board: &Vec<Card>, player_cards: &Vec<Card>) {
     let mut rank_map: HashMap<Rank, Vec<Card>> = HashMap::new();
 
     cards.iter().for_each(|c| {
-        let entry = suit_map.entry(c.suit.clone()).or_insert(vec![]);
-        entry.push(c.clone());
+        let entry = suit_map.entry(c.suit).or_insert_with(Vec::new);
+        entry.push(*c);
         sort_by_rank_desc(entry);
-        let entry = rank_map.entry(c.rank.clone()).or_insert(vec![]);
-        entry.push(c.clone());
+        let entry = rank_map.entry(c.rank).or_insert_with(Vec::new);
+        entry.push(*c);
         sort_by_rank_desc(entry);
     })
-
-
 }

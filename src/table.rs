@@ -1,4 +1,4 @@
-use crate::{Card, Cards, player::Player};
+use crate::{player::Player, Card, Cards};
 
 #[derive(Debug, Clone)]
 struct Table {

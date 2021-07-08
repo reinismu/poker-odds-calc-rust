@@ -1,8 +1,6 @@
-use crate::{
-    Card, GameType,
-};
+use crate::{Card, GameType};
 
-pub fn get_straight(game_type: GameType, cards: &Vec<Card>) -> Option<Vec<Card>> {
+pub fn get_straight(game_type: GameType, cards: &[Card]) -> Option<Vec<Card>> {
     let mut card_match: Vec<&Card> = vec![];
     let mut card_match_omaha: Vec<Vec<&Card>> = vec![];
     for (i, card) in cards.iter().enumerate() {
@@ -31,7 +29,7 @@ pub fn get_straight(game_type: GameType, cards: &Vec<Card>) -> Option<Vec<Card>>
                     // TODO add logic
                     return None;
                 }
-                _=> {
+                _ => {
                     return Some(card_match.into_iter().cloned().collect());
                 }
             }
@@ -50,7 +48,10 @@ mod tests {
     #[test]
     fn can_get_straight_flush() {
         assert_eq!(
-            get_straight(GameType::TexasHoldem, &Card::from_cards_str("8h7c6c5c4d").unwrap()),
+            get_straight(
+                GameType::TexasHoldem,
+                &Card::from_cards_str("8h7c6c5c4d").unwrap()
+            ),
             Some(vec![
                 Card {
                     suit: Suit::Hearts,
@@ -79,7 +80,10 @@ mod tests {
     #[test]
     fn can_get_straight_flush_bad_cards() {
         assert_eq!(
-            get_straight(GameType::TexasHoldem, &Card::from_cards_str("Ac7c6c5c4c").unwrap()),
+            get_straight(
+                GameType::TexasHoldem,
+                &Card::from_cards_str("Ac7c6c5c4c").unwrap()
+            ),
             None
         );
     }

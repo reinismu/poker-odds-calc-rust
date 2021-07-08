@@ -95,7 +95,6 @@ impl FromStr for Card {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,9 +111,6 @@ mod tests {
     }
     #[test]
     fn can_get_rank_value() {
-        assert_eq!(
-            Rank::Ace as u8,
-            14
-        );
+        assert_eq!(Rank::Ace as u8, 14);
     }
 }

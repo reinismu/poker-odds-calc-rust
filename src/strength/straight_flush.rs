@@ -8,7 +8,7 @@ use crate::{
 pub fn get_straight_flush(
     game_type: GameType,
     suit_map: &HashMap<Suit, Vec<Card>>,
-    player_cards: &Vec<Card>,
+    player_cards: &[Card],
 ) -> Option<Vec<Card>> {
     for (_, cards) in suit_map.iter() {
         if cards.len() < 5 {
