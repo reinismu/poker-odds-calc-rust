@@ -5,7 +5,7 @@ use crate::{card::Rank, Card, GameType};
 pub fn get_one_pair(
     game_type: GameType,
     cards: &[Card],
-    rank_map: HashMap<Rank, Vec<Card>>,
+    rank_map: &HashMap<Rank, Vec<Card>>,
     player_cards: &[Card],
     board: &[Card],
 ) -> Option<Vec<Card>> {
@@ -85,7 +85,7 @@ mod tests {
             get_one_pair(
                 GameType::TexasHoldem,
                 &Card::from_cards_str("AcAd7d6d3c2h").unwrap(),
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("AcAd").unwrap(),
                 &Card::from_cards_str("6d3c2h").unwrap()
             ),

@@ -5,7 +5,7 @@ pub fn get_high_cards(
     cards: &[Card],
     player_cards: &[Card],
     board: &[Card],
-) -> Option<Vec<Card>> {
+) -> Vec<Card> {
     match game_type {
         GameType::Omaha => {
             let mut board: Vec<Card> = board.to_vec();
@@ -20,9 +20,9 @@ pub fn get_high_cards(
 
             cards.sort_by(|a, b| b.rank.partial_cmp(&a.rank).unwrap());
 
-            Some(cards)
+            cards
         }
-        _ => return Some(cards.iter().take(5).cloned().collect()),
+        _ => return cards.iter().take(5).cloned().collect(),
     }
 }
 
@@ -41,7 +41,7 @@ mod tests {
                 &Card::from_cards_str("8h7c").unwrap(),
                 &Card::from_cards_str("4d4c2c").unwrap()
             ),
-            Some(vec![
+            vec![
                 Card {
                     suit: Suit::Hearts,
                     rank: Rank::Eight
@@ -62,7 +62,7 @@ mod tests {
                     suit: Suit::Diamonds,
                     rank: Rank::Four
                 }
-            ])
+            ]
         );
     }
     #[test]
@@ -74,7 +74,7 @@ mod tests {
                 &Card::from_cards_str("8h7c6c").unwrap(),
                 &Card::from_cards_str("4d4c2c").unwrap()
             ),
-            Some(vec![
+            vec![
                 Card {
                     suit: Suit::Hearts,
                     rank: Rank::Eight
@@ -95,7 +95,7 @@ mod tests {
                     suit: Suit::Clubs,
                     rank: Rank::Two
                 }
-            ])
+            ]
         );
     }
 }

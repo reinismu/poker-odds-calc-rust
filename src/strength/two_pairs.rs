@@ -5,7 +5,7 @@ use crate::{card::Rank, Card, GameType};
 pub fn get_two_pairs(
     game_type: GameType,
     cards: &[Card],
-    rank_map: HashMap<Rank, Vec<Card>>,
+    rank_map: &HashMap<Rank, Vec<Card>>,
     player_cards: &[Card],
     board: &[Card],
 ) -> Option<Vec<Card>> {
@@ -14,9 +14,7 @@ pub fn get_two_pairs(
     if pairs.len() < 2 {
         return None;
     }
-    if pairs.len() > 2 {
-        pairs.sort_by(|a, b| b[0].rank.partial_cmp(&a[0].rank).unwrap());
-    }
+    pairs.sort_by(|a, b| b[0].rank.partial_cmp(&a[0].rank).unwrap());
 
     match game_type {
         GameType::Omaha => {
@@ -91,7 +89,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn can_get_one_pair() {
+    fn can_get_two_pairs() {
         let rank_map = hashmap! {
             Rank::Two => Card::from_cards_str("2h2c").unwrap(),
             Rank::Ace => Card::from_cards_str("AcAd").unwrap(),
@@ -100,19 +98,11 @@ mod tests {
             get_two_pairs(
                 GameType::TexasHoldem,
                 &Card::from_cards_str("AcAd6d5c2h2c").unwrap(),
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("AcAd").unwrap(),
                 &Card::from_cards_str("6d3c2h").unwrap()
             ),
             Some(vec![
-                Card {
-                    suit: Suit::Hearts,
-                    rank: Rank::Two
-                },
-                Card {
-                    suit: Suit::Clubs,
-                    rank: Rank::Two
-                },
                 Card {
                     suit: Suit::Clubs,
                     rank: Rank::Ace
@@ -120,6 +110,14 @@ mod tests {
                 Card {
                     suit: Suit::Diamonds,
                     rank: Rank::Ace
+                },
+                Card {
+                    suit: Suit::Hearts,
+                    rank: Rank::Two
+                },
+                Card {
+                    suit: Suit::Clubs,
+                    rank: Rank::Two
                 },
                 Card {
                     suit: Suit::Diamonds,

@@ -1,6 +1,8 @@
 use std::str::FromStr;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-#[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
+#[derive(Debug, PartialEq, Clone, Copy, Eq, Hash, EnumIter)]
 pub enum Suit {
     Hearts,
     Clubs,
@@ -22,9 +24,8 @@ impl FromStr for Suit {
     }
 }
 
-#[derive(Debug, PartialEq, PartialOrd, Clone, Copy, Eq, Hash)]
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy, Eq, Hash, EnumIter)]
 pub enum Rank {
-    LowAce = 1,
     Two = 2,
     Three = 3,
     Four = 4,
@@ -78,6 +79,19 @@ impl Card {
             .map(|s| Card::from_str(&s))
             .collect()
     }
+
+    pub fn get_all_cards() -> Vec<Card> {
+        Rank::iter()
+            .flat_map(|rank| Suit::iter().map(move |suit| Card { suit, rank }))
+            .collect()
+    }
+
+    pub fn get_short_deck_cards() -> Vec<Card> {
+        Rank::iter()
+            .filter(|r| *r as u8 > 5)
+            .flat_map(|rank| Suit::iter().map(move |suit| Card { suit, rank }))
+            .collect()
+    }
 }
 
 impl FromStr for Card {
@@ -109,8 +123,19 @@ mod tests {
             Card::from_str("Ac").unwrap()
         );
     }
+
     #[test]
     fn can_get_rank_value() {
         assert_eq!(Rank::Ace as u8, 14);
+    }
+
+    #[test]
+    fn can_get_full_deck() {
+        assert_eq!(Card::get_all_cards().len(), 52);
+    }
+
+    #[test]
+    fn can_get_short_deck() {
+        assert_eq!(Card::get_short_deck_cards().len(), 36);
     }
 }

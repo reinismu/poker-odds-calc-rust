@@ -1,9 +1,9 @@
-mod flush;
-mod full_house;
-mod high_cards;
-mod one_pair;
-mod quads;
-mod straight;
-mod straight_flush;
-mod three_of_a_kind;
-mod two_pairs;
+pub mod flush;
+pub mod full_house;
+pub mod high_cards;
+pub mod one_pair;
+pub mod quads;
+pub mod straight;
+pub mod straight_flush;
+pub mod three_of_a_kind;
+pub mod two_pairs;

@@ -5,13 +5,13 @@ use std::str::FromStr;
 
 use card::Card;
 
-mod card;
+pub mod card;
 mod game;
 mod player;
 mod strength;
-mod table;
+pub mod table;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GameType {
     TexasHoldem,
     ShortdeckHoldem,

@@ -2,7 +2,7 @@ use crate::Card;
 
 #[derive(Debug, Clone)]
 pub struct Player {
-    hand: Vec<Card>,
+    pub hand: Vec<Card>,
 }
 
 impl Player {

@@ -5,7 +5,7 @@ use crate::{card::Rank, Card, GameType};
 pub fn get_three_of_a_kind(
     game_type: GameType,
     cards: &[Card],
-    rank_map: HashMap<Rank, Vec<Card>>,
+    rank_map: &HashMap<Rank, Vec<Card>>,
     player_cards: &[Card],
     board: &[Card],
 ) -> Option<Vec<Card>> {
@@ -94,7 +94,7 @@ mod tests {
             get_three_of_a_kind(
                 GameType::TexasHoldem,
                 &Card::from_cards_str("AcAd3h2h2c2d").unwrap(),
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("2h2c").unwrap(),
                 &Card::from_cards_str("AcAd3h2d2s").unwrap()
             ),
@@ -133,7 +133,7 @@ mod tests {
             get_three_of_a_kind(
                 GameType::TexasHoldem,
                 &Card::from_cards_str("AcAd7d2d2c").unwrap(),
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("AcAd").unwrap(),
                 &Card::from_cards_str("7d2d2c").unwrap()
             ),

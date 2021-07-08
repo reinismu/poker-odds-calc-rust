@@ -4,7 +4,7 @@ use crate::{card::Rank, Card, GameType};
 
 pub fn get_full_house(
     game_type: GameType,
-    rank_map: HashMap<Rank, Vec<Card>>,
+    rank_map: &HashMap<Rank, Vec<Card>>,
     player_cards: &[Card],
 ) -> Option<Vec<Card>> {
     let mut three_of_a_kinds: Vec<&[Card]> = vec![];
@@ -22,9 +22,11 @@ pub fn get_full_house(
         return None;
     }
 
+    three_of_a_kinds.sort_by(|a, b| b[0].rank.partial_cmp(&a[0].rank).unwrap());
+    pairs.sort_by(|a, b| b[0].rank.partial_cmp(&a[0].rank).unwrap());
+
     match game_type {
         GameType::Omaha => {
-            three_of_a_kinds.sort_by(|a, b| b[0].rank.partial_cmp(&a[0].rank).unwrap());
             let mut all_combinations: Vec<&[Card]> =
                 three_of_a_kinds.iter().chain(&pairs).cloned().collect();
             all_combinations.sort_by(|a, b| a[0].rank.partial_cmp(&b[0].rank).unwrap());
@@ -90,7 +92,7 @@ mod tests {
         assert_eq!(
             get_full_house(
                 GameType::TexasHoldem,
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("8h7c").unwrap()
             ),
             Some(vec![
@@ -127,7 +129,7 @@ mod tests {
         assert_eq!(
             get_full_house(
                 GameType::Omaha,
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("AcAd4d5d").unwrap()
             ),
             Some(vec![
@@ -164,7 +166,7 @@ mod tests {
         assert_eq!(
             get_full_house(
                 GameType::Omaha,
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("Ad4d5d").unwrap()
             ),
             None
@@ -181,7 +183,7 @@ mod tests {
         assert_eq!(
             get_full_house(
                 GameType::TexasHoldem,
-                rank_map,
+                &rank_map,
                 &Card::from_cards_str("8h7c").unwrap()
             ),
             None

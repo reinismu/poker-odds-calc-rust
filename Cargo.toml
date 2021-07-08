@@ -9,3 +9,6 @@ edition = "2018"
 [dependencies]
 structopt = "0.3"
 maplit = "1.0.2"
+strum = "0.21.0"
+strum_macros = "0.21.1"
+rand = "0.8.4"

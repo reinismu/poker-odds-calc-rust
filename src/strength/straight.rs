@@ -26,8 +26,8 @@ pub fn get_straight(game_type: GameType, cards: &[Card]) -> Option<Vec<Card>> {
         if card_match.len() >= 5 {
             match game_type {
                 GameType::Omaha => {
+                    panic!("Not yet implemented :/");
                     // TODO add logic
-                    return None;
                 }
                 _ => {
                     return Some(card_match.into_iter().cloned().collect());

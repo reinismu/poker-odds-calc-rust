@@ -1,4 +1,4 @@
-use poker_odds_calc::{Cards, GameType};
+use poker_odds_calc::{table::Table, Cards, GameType};
 use structopt::StructOpt;
 
 /// A basic example
@@ -12,7 +12,7 @@ struct Opt {
         parse(try_from_str),
         help = "Select between texas_holdem, shortdeck_holdem and omaha"
     )]
-    game: GameType,
+    pub game: GameType,
 
     #[structopt(
         short,
@@ -20,7 +20,7 @@ struct Opt {
         parse(try_from_str),
         help = "Define community cards (ex. `5sTd9cTh`)"
     )]
-    board: Cards,
+    pub board: Option<Cards>,
 
     #[structopt(
         short,
@@ -28,7 +28,7 @@ struct Opt {
         parse(try_from_str),
         help = "Define player hand (ex. `AcKh`)"
     )]
-    players: Vec<Cards>,
+    pub players: Vec<Cards>,
 
     #[structopt(
         default_value = "100000",
@@ -36,27 +36,36 @@ struct Opt {
         long,
         help = "Limit number of iterations"
     )]
-    limit: u64,
+    pub limit: u64,
 
     #[structopt(
         short,
         long,
         help = "Run all possible board combinations, regardless limit option"
     )]
-    exhaustive: bool,
+    pub exhaustive: bool,
 
     #[structopt(
         short,
         long,
         help = "ead card(s) to exclude from calculation (ex. `2s2d`)"
     )]
-    dead: Option<Cards>,
+    pub dead: Option<Cards>,
 
     #[structopt(short, long, help = "Option only available for -g shortdeck_holdem")]
-    tripsbeatstraight: bool,
+    pub tripsbeatstraight: bool,
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt: Opt = Opt::from_args();
     println!("{:#?}", opt);
+    let table = Table::new(
+        opt.players,
+        opt.board.unwrap_or(Cards { cards: vec![] }).cards,
+        opt.dead.unwrap_or(Cards { cards: vec![] }).cards,
+    );
+    println!(
+        "{:#?}",
+        table.get_results(opt.game, opt.tripsbeatstraight, opt.limit)
+    );
 }
