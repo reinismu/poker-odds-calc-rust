@@ -108,7 +108,7 @@ mod tests {
             Suit::Clubs => Card::from_cards_str("Tc8c7c6c5c").unwrap(),
         };
         assert_eq!(
-            get_straight_flush(GameType::TexasHoldem, &suit_map, &vec![]),
+            get_straight_flush(GameType::TexasHoldem, &suit_map, &[]),
             None
         );
     }
@@ -120,7 +120,7 @@ mod tests {
             Suit::Clubs => Card::from_cards_str("Ac5c4c3c2c").unwrap(),
         };
         assert_eq!(
-            get_straight_flush(GameType::TexasHoldem, &suit_map, &vec![]),
+            get_straight_flush(GameType::TexasHoldem, &suit_map, &[]),
             Some(vec![
                 Card {
                     suit: Suit::Clubs,
@@ -152,7 +152,7 @@ mod tests {
             Suit::Clubs => Card::from_cards_str("Ac9c8c7c6c").unwrap(),
         };
         assert_eq!(
-            get_straight_flush(GameType::ShortdeckHoldem, &suit_map, &vec![]),
+            get_straight_flush(GameType::ShortdeckHoldem, &suit_map, &[]),
             Some(vec![
                 Card {
                     suit: Suit::Clubs,
