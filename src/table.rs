@@ -1,6 +1,7 @@
+use itertools::Itertools;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Instant};
 
 use crate::{
     game::{self, HandCombination},
@@ -28,7 +29,10 @@ pub struct Result {
     player_results: Vec<PlayerResult>,
     iterations: u64,
     approximate: bool,
+    time_in_ms: u64,
 }
+
+const MAX_ITERATION_COUNT_BEFORE_APPROXIMATION: u64 = 1_000_000;
 
 impl Table {
     pub fn new(
@@ -46,7 +50,7 @@ impl Table {
         }
     }
 
-    fn get_available_cards(&self, game_type: GameType) -> Vec<Card> {
+    fn get_unused_cards(&self, game_type: GameType) -> Vec<Card> {
         match game_type {
             GameType::ShortdeckHoldem => Card::get_short_deck_cards(),
             _ => Card::get_all_cards(),
@@ -66,9 +70,12 @@ impl Table {
     pub fn get_results(
         &self,
         game_type: GameType,
-        trips_beat_straight: bool,
         limit: u64,
+        trips_beat_straight: bool,
+        run_exhaustive: bool,
     ) -> Result {
+        let start_instant = Instant::now();
+
         let mut player_results: Vec<PlayerResult> = self
             .players
             .iter()
@@ -80,7 +87,7 @@ impl Table {
             })
             .collect();
 
-        let mut available_cards = self.get_available_cards(game_type);
+        let mut unused_cards = self.get_unused_cards(game_type);
         let mut iterations = 0u64;
 
         let mut add_results = |players: &[Player], board: &[Card]| {
@@ -114,17 +121,55 @@ impl Table {
             }
             iterations += 1;
         };
+        let missing_card_count = 5 - self.community_cards.len();
+
+        fn permutation_count(num: u64, board_missing_count: u64) -> u64 {
+            ((num - board_missing_count + 1)..=num).product()
+        }
+
+        let all_permutation_count =
+            permutation_count(unused_cards.len() as u64, missing_card_count as u64);
+        let approximate =
+            run_exhaustive || all_permutation_count > MAX_ITERATION_COUNT_BEFORE_APPROXIMATION;
 
         let mut rng = thread_rng();
-        for _ in 0..limit {
-            let (shuffled_cards, _) = available_cards.partial_shuffle(&mut rng, 5);
-            add_results(&self.players, shuffled_cards);
+        if approximate {
+            for _ in 0..limit {
+                let (shuffled_cards, _) =
+                    unused_cards.partial_shuffle(&mut rng, missing_card_count);
+                add_results(
+                    &self.players,
+                    &self
+                        .community_cards
+                        .iter()
+                        .chain(shuffled_cards.iter())
+                        .cloned()
+                        .collect::<Vec<Card>>(),
+                );
+            }
+        } else {
+            for added_cards in unused_cards
+                .iter()
+                .permutations(missing_card_count)
+                .unique()
+            {
+                add_results(
+                    &self.players,
+                    &self
+                        .community_cards
+                        .iter()
+                        .chain(added_cards.into_iter())
+                        .cloned()
+                        .collect::<Vec<Card>>(),
+                );
+            }
         }
 
         Result {
             player_results,
             iterations,
-            approximate: true,
+            approximate,
+            time_in_ms: start_instant.elapsed().as_millis() as u64,
         }
     }
 }
@@ -149,7 +194,7 @@ mod tests {
         );
         println!(
             "{:#?}",
-            table.get_results(GameType::TexasHoldem, false, 10000)
+            table.get_results(GameType::TexasHoldem, 10000, false, true)
         )
     }
 }

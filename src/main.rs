@@ -66,6 +66,6 @@ fn main() {
     );
     println!(
         "{:#?}",
-        table.get_results(opt.game, opt.tripsbeatstraight, opt.limit)
+        table.get_results(opt.game, opt.limit, opt.tripsbeatstraight, opt.exhaustive)
     );
 }

@@ -64,7 +64,7 @@ impl FromStr for Rank {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Card {
     pub suit: Suit,
     pub rank: Rank,
