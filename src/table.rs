@@ -26,13 +26,11 @@ pub struct PlayerResult {
 
 #[derive(Debug)]
 pub struct Result {
-    player_results: Vec<PlayerResult>,
-    iterations: u64,
-    approximate: bool,
-    time_in_ms: u64,
+    pub player_results: Vec<PlayerResult>,
+    pub iterations: u64,
+    pub approximate: bool,
+    pub time_in_ms: u64,
 }
-
-const MAX_ITERATION_COUNT_BEFORE_APPROXIMATION: u64 = 1_000_000;
 
 impl Table {
     pub fn new(
@@ -72,7 +70,6 @@ impl Table {
         game_type: GameType,
         limit: u64,
         trips_beat_straight: bool,
-        run_exhaustive: bool,
     ) -> Result {
         let start_instant = Instant::now();
 
@@ -87,7 +84,6 @@ impl Table {
             })
             .collect();
 
-        let mut unused_cards = self.get_unused_cards(game_type);
         let mut iterations = 0u64;
 
         let mut add_results = |players: &[Player], board: &[Card]| {
@@ -122,53 +118,32 @@ impl Table {
             iterations += 1;
         };
         let missing_card_count = 5 - self.community_cards.len();
+        let mut unused_cards = self.get_unused_cards(game_type);
 
-        fn permutation_count(num: u64, board_missing_count: u64) -> u64 {
-            ((num - board_missing_count + 1)..=num).product()
-        }
-
-        let all_permutation_count =
-            permutation_count(unused_cards.len() as u64, missing_card_count as u64);
-        let approximate =
-            run_exhaustive || all_permutation_count > MAX_ITERATION_COUNT_BEFORE_APPROXIMATION;
-
+        // Shuffle for better approximation
         let mut rng = thread_rng();
-        if approximate {
-            for _ in 0..limit {
-                let (shuffled_cards, _) =
-                    unused_cards.partial_shuffle(&mut rng, missing_card_count);
-                add_results(
-                    &self.players,
-                    &self
-                        .community_cards
-                        .iter()
-                        .chain(shuffled_cards.iter())
-                        .cloned()
-                        .collect::<Vec<Card>>(),
-                );
-            }
-        } else {
-            for added_cards in unused_cards
-                .iter()
-                .permutations(missing_card_count)
-                .unique()
-            {
-                add_results(
-                    &self.players,
-                    &self
-                        .community_cards
-                        .iter()
-                        .chain(added_cards.into_iter())
-                        .cloned()
-                        .collect::<Vec<Card>>(),
-                );
-            }
+        unused_cards.shuffle(&mut rng);
+
+        for added_cards in unused_cards
+            .iter()
+            .combinations(missing_card_count)
+            .take(limit as usize)
+        {
+            add_results(
+                &self.players,
+                &self
+                    .community_cards
+                    .iter()
+                    .chain(added_cards.into_iter())
+                    .cloned()
+                    .collect::<Vec<Card>>(),
+            );
         }
 
         Result {
             player_results,
             iterations,
-            approximate,
+            approximate: iterations >= limit,
             time_in_ms: start_instant.elapsed().as_millis() as u64,
         }
     }
@@ -194,7 +169,48 @@ mod tests {
         );
         println!(
             "{:#?}",
-            table.get_results(GameType::TexasHoldem, 10000, false, true)
+            table.get_results(GameType::TexasHoldem, 10000, false)
         )
+    }
+
+    #[test]
+    fn can_get_correct_result() {
+        let table = Table::new(
+            vec![
+                Cards {
+                    cards: Card::from_cards_str("AdKc").unwrap(),
+                },
+                Cards {
+                    cards: Card::from_cards_str("Ac7c").unwrap(),
+                },
+            ],
+            Card::from_cards_str("2s3s4s5s").unwrap(),
+            vec![],
+        );
+        let result = table.get_results(GameType::TexasHoldem, 10000, false);
+        assert_eq!(
+            result.player_results[0]
+                .ranks
+                .get(&HandCombination::Straight),
+            Some(&35u64)
+        );
+    }
+
+    #[test]
+    fn can_get_correct_result_2() {
+        let table = Table::new(
+            vec![
+                Cards {
+                    cards: Card::from_cards_str("AdKc").unwrap(),
+                },
+                Cards {
+                    cards: Card::from_cards_str("Ac7c").unwrap(),
+                },
+            ],
+            Card::from_cards_str("2s3s4s5s6c").unwrap(),
+            vec![],
+        );
+        let result = table.get_results(GameType::TexasHoldem, 10000, false);
+        assert_eq!(result.player_results[1].wins, 1);
     }
 }

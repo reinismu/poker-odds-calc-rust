@@ -12,6 +12,12 @@ pub fn get_straight(
     }
     let is_omaha = game_type == GameType::Omaha;
 
+    let lowest_rank = if game_type == GameType::ShortdeckHoldem {
+        Rank::Six
+    } else {
+        Rank::Two
+    };
+
     let mut card_match: Vec<&Card> = Vec::with_capacity(5);
     let mut card_match_omaha: Vec<Vec<&Card>> = vec![];
     for (i, card) in cards.iter().enumerate() {
@@ -26,12 +32,17 @@ pub fn get_straight(
 
         let prev_card = *card_match.last().unwrap();
 
-        if is_omaha && card.rank == prev_card.rank {
-            card_match_omaha.iter_mut().last().unwrap().push(card);
+        if card.rank == prev_card.rank {
+            if is_omaha {
+                card_match_omaha.iter_mut().last().unwrap().push(card);
+            }
         } else if card.rank as u8 + 1 == prev_card.rank as u8 {
             card_match.push(card);
             if is_omaha {
                 card_match_omaha.push(vec![card]);
+            }
+            if card.rank == lowest_rank && cards[0].rank == Rank::Ace && card_match.len() == 4 {
+                card_match.push(&cards[0]);
             }
         } else if card_match.len() < 5 {
             card_match = vec![card];
@@ -98,6 +109,130 @@ mod tests {
                 Card {
                     suit: Suit::Diamonds,
                     rank: Rank::Four
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn can_get_straight_flush_2() {
+        let rank_map = hashmap! {
+            Rank::Two => Card::from_cards_str("2s").unwrap(),
+            Rank::Three => Card::from_cards_str("3s").unwrap(),
+            Rank::Four => Card::from_cards_str("4s").unwrap(),
+            Rank::Five => Card::from_cards_str("5s").unwrap(),
+            Rank::King => Card::from_cards_str("Kc").unwrap(),
+            Rank::Ace => Card::from_cards_str("Ad").unwrap(),
+        };
+        assert_eq!(
+            get_straight(
+                GameType::TexasHoldem,
+                &Card::from_cards_str("AdKc5s4s3s2s").unwrap(),
+                &rank_map
+            ),
+            Some(vec![
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Five
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Four
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Three
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Two
+                },
+                Card {
+                    suit: Suit::Diamonds,
+                    rank: Rank::Ace
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn can_get_straight_flush_3() {
+        let rank_map = hashmap! {
+            Rank::Two => Card::from_cards_str("2s").unwrap(),
+            Rank::Three => Card::from_cards_str("3s3c").unwrap(),
+            Rank::Four => Card::from_cards_str("4s").unwrap(),
+            Rank::Five => Card::from_cards_str("5s").unwrap(),
+            Rank::King => Card::from_cards_str("Kc").unwrap(),
+            Rank::Ace => Card::from_cards_str("Ad").unwrap(),
+        };
+        assert_eq!(
+            get_straight(
+                GameType::TexasHoldem,
+                &Card::from_cards_str("AdKc5s4s3s3c2s").unwrap(),
+                &rank_map
+            ),
+            Some(vec![
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Five
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Four
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Three
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Two
+                },
+                Card {
+                    suit: Suit::Diamonds,
+                    rank: Rank::Ace
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn can_get_straight_flush_4() {
+        let rank_map = hashmap! {
+            Rank::Two => Card::from_cards_str("2s").unwrap(),
+            Rank::Three => Card::from_cards_str("3s3c").unwrap(),
+            Rank::Four => Card::from_cards_str("4s").unwrap(),
+            Rank::Five => Card::from_cards_str("5s").unwrap(),
+            Rank::Six => Card::from_cards_str("6c").unwrap(),
+            Rank::King => Card::from_cards_str("Kc").unwrap(),
+            Rank::Ace => Card::from_cards_str("Ad").unwrap(),
+        };
+        assert_eq!(
+            get_straight(
+                GameType::TexasHoldem,
+                &Card::from_cards_str("AdKc6c5s4s3s3c2s").unwrap(),
+                &rank_map
+            ),
+            Some(vec![
+                Card {
+                    suit: Suit::Clubs,
+                    rank: Rank::Six
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Five
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Four
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Three
+                },
+                Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Two
                 }
             ])
         );

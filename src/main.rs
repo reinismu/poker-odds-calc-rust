@@ -41,13 +41,6 @@ struct Opt {
     #[structopt(
         short,
         long,
-        help = "Run all possible board combinations, regardless limit option"
-    )]
-    pub exhaustive: bool,
-
-    #[structopt(
-        short,
-        long,
         help = "ead card(s) to exclude from calculation (ex. `2s2d`)"
     )]
     pub dead: Option<Cards>,
@@ -64,8 +57,13 @@ fn main() {
         opt.board.unwrap_or(Cards { cards: vec![] }).cards,
         opt.dead.unwrap_or(Cards { cards: vec![] }).cards,
     );
-    println!(
-        "{:#?}",
-        table.get_results(opt.game, opt.limit, opt.tripsbeatstraight, opt.exhaustive)
-    );
+    let result = table.get_results(opt.game, opt.limit, opt.tripsbeatstraight);
+
+    for pr in &result.player_results {
+        println!(
+            "win {}% tie {}%",
+            (pr.wins as f64 * 100f64) / result.iterations as f64,
+            (pr.ties as f64 * 100f64) / result.iterations as f64,
+        );
+    }
 }

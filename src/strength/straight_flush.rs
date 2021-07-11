@@ -29,7 +29,7 @@ pub fn get_straight_flush(
             let prev_card = matches.last().unwrap();
             if card.rank as u8 + 1 == prev_card.rank as u8 {
                 matches.push(*card);
-                if card.rank == lowest_rank && cards[0].rank == Rank::Ace {
+                if card.rank == lowest_rank && cards[0].rank == Rank::Ace && matches.len() == 4 {
                     matches.push(cards[0]);
                 }
                 if matches.len() >= 5 {
