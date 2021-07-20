@@ -139,7 +139,13 @@ impl Table {
                 a.iter()
                     .zip(b)
                     .map(|(f, s)| {
-                        let new_ranks = f.ranks.clone();
+                        let mut new_ranks = f.ranks.clone();
+
+                        s.ranks.into_iter().for_each(|(k, v)| {
+                            let rank = new_ranks.entry(k).or_default();
+                            *rank += v;
+                        });
+
                         PlayerResult {
                             hand: f.hand.clone(),
                             ties: f.ties + s.ties,
