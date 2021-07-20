@@ -1,10 +1,12 @@
 use itertools::Itertools;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use std::{collections::HashMap, time::Instant};
+use rayon::iter::ParallelIterator;
+use rayon::prelude::*;
+use std::{collections::HashMap, sync::atomic::AtomicU64, time::Instant};
 
 use crate::{
-    game::{self, HandCombination},
+    game::{self, HandCombination, HandStrength},
     player::Player,
     Card, Cards, GameType,
 };
@@ -16,7 +18,7 @@ pub struct Table {
     dead_cards: Vec<Card>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PlayerResult {
     pub hand: Vec<Card>,
     pub wins: u64,
@@ -73,7 +75,7 @@ impl Table {
     ) -> Result {
         let start_instant = Instant::now();
 
-        let mut player_results: Vec<PlayerResult> = self
+        let start_player_results: Vec<PlayerResult> = self
             .players
             .iter()
             .map(|p| PlayerResult {
@@ -84,39 +86,8 @@ impl Table {
             })
             .collect();
 
-        let mut iterations = 0u64;
+        let atomic_iterations = AtomicU64::new(0);
 
-        let mut add_results = |players: &[Player], board: &[Card]| {
-            let hand_strengths = game::get_results(game_type, trips_beat_straight, players, board);
-
-            let top_points = hand_strengths
-                .iter()
-                .max_by(|a, b| a.points.cmp(&b.points))
-                .unwrap()
-                .points;
-
-            let is_tie = hand_strengths
-                .iter()
-                .filter(|hs| hs.points == top_points)
-                .take(2)
-                .count()
-                > 1;
-
-            for (i, pr) in player_results.iter_mut().enumerate() {
-                let hand_strength = &hand_strengths[i];
-                let rank = pr.ranks.entry(hand_strength.hand_combination).or_default();
-                *rank += 1;
-
-                if hand_strength.points == top_points {
-                    if is_tie {
-                        pr.ties += 1;
-                    } else {
-                        pr.wins += 1;
-                    }
-                }
-            }
-            iterations += 1;
-        };
         let missing_card_count = 5 - self.community_cards.len();
         let mut unused_cards = self.get_unused_cards(game_type);
 
@@ -124,22 +95,87 @@ impl Table {
         let mut rng = thread_rng();
         unused_cards.shuffle(&mut rng);
 
-        for added_cards in unused_cards
+        let hand_strength_to_player_result =
+            |results: Vec<PlayerResult>, hand_strengths: Vec<HandStrength>| -> Vec<PlayerResult> {
+                let top_points = hand_strengths
+                    .iter()
+                    .max_by(|a, b| a.points.cmp(&b.points))
+                    .unwrap()
+                    .points;
+
+                let is_tie = hand_strengths
+                    .iter()
+                    .filter(|hs| hs.points == top_points)
+                    .take(2)
+                    .count()
+                    > 1;
+
+                results
+                    .iter()
+                    .enumerate()
+                    .map(|(i, pr)| {
+                        let mut new_pr = pr.clone();
+                        let hand_strength = &hand_strengths[i];
+                        let rank = new_pr
+                            .ranks
+                            .entry(hand_strength.hand_combination)
+                            .or_default();
+                        *rank += 1;
+
+                        if hand_strength.points == top_points {
+                            if is_tie {
+                                new_pr.ties += 1;
+                            } else {
+                                new_pr.wins += 1;
+                            }
+                        }
+                        new_pr
+                    })
+                    .collect()
+            };
+
+        let sum_player_results =
+            |a: Vec<PlayerResult>, b: Vec<PlayerResult>| -> Vec<PlayerResult> {
+                a.iter()
+                    .zip(b)
+                    .map(|(f, s)| {
+                        let new_ranks = f.ranks.clone();
+                        PlayerResult {
+                            hand: f.hand.clone(),
+                            ties: f.ties + s.ties,
+                            wins: f.wins + s.wins,
+                            ranks: new_ranks,
+                        }
+                    })
+                    .collect()
+            };
+
+        let player_results = unused_cards
             .iter()
             .combinations(missing_card_count)
             .take(limit as usize)
-        {
-            add_results(
-                &self.players,
-                &self
-                    .community_cards
-                    .iter()
-                    .chain(added_cards.into_iter())
-                    .cloned()
-                    .collect::<Vec<Card>>(),
-            );
-        }
+            .par_bridge()
+            .map(|added_cards| {
+                atomic_iterations.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                game::get_results(
+                    game_type,
+                    trips_beat_straight,
+                    &self.players,
+                    &self
+                        .community_cards
+                        .iter()
+                        .chain(added_cards.into_iter())
+                        .cloned()
+                        .collect::<Vec<Card>>(),
+                )
+            })
+            .fold(
+                || start_player_results.clone(),
+                hand_strength_to_player_result,
+            )
+            .reduce(|| start_player_results.clone(), sum_player_results);
 
+        let iterations = atomic_iterations.load(std::sync::atomic::Ordering::SeqCst);
         Result {
             player_results,
             iterations,

@@ -59,6 +59,7 @@ fn main() {
     );
     let result = table.get_results(opt.game, opt.limit, opt.tripsbeatstraight);
 
+    println!("time {}ms", result.time_in_ms);
     for pr in &result.player_results {
         println!(
             "win {}% tie {}%",
